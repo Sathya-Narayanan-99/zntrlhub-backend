@@ -26,6 +26,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework_simplejwt',
+    'drf_yasg',
     'app',
 ]
 
@@ -129,3 +130,16 @@ SIMPLE_JWT = {
 
 
 AUTH_USER_MODEL = 'app.User'
+
+
+SWAGGER_SETTINGS = {
+    'SECURITY_DEFINITIONS': {
+        'Bearer': {
+            'type': 'apiKey',
+            'name': 'Authorization',
+            'in': 'header',
+            'description': 'JWT Bearer token for authentication. \
+                Please prefix the token with "Bearer ".',
+        }
+    },
+}
