@@ -4,6 +4,7 @@ services:
   web:
     build: ./web
     container_name: zntrlhub-web
+    command: python manage.py runserver 0.0.0.0:8000
     restart: always
     volumes:
       - ./web/:/usr/src/
