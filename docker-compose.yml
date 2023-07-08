@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  web:
+    build: ./web
+    container_name: zntrlhub-web
+    command: python manage.py runserver 0.0.0.0:8000
+    restart: always
+    volumes:
+      - ./web/:/usr/src/
+    ports:
+      - 8000:8000
+    env_file:
+      - ./.env.dev
+    tty: true
+  db:
+    image: postgres:13.0-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_USER=zntrlhub_dev
+      - POSTGRES_PASSWORD=zntrlhub_dev_password
+      - POSTGRES_DB=zntrlhub_local
+volumes:
+  postgres_data:
