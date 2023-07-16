@@ -8,7 +8,9 @@ from . import managers
 
 class Account(TenantModel):
     name = models.CharField(max_length=128)
-    site = models.URLField()
+    site = models.CharField(max_length=256, unique=True)
+
+    objects = managers.AccountManager()
 
     class TenantMeta:
         tenant_field_name = 'id'
