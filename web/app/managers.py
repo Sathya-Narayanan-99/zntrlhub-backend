@@ -1,6 +1,7 @@
 from django.contrib.auth.models import BaseUserManager
 from django.db import models
 
+from app.querysets import VisitorQuerySet
 from app.tenant import get_current_account
 
 class UserManager(BaseUserManager):
@@ -46,6 +47,9 @@ class VisitorManager(models.Manager):
 
     use_in_migrations = True
 
+    def get_queryset(self):
+        return VisitorQuerySet(self.model, using=self._db)
+
     def create_visitor(self, name, whatsapp_number, device_uuid, account):
         visitor = self.create(name=name, whatsapp_number=whatsapp_number, device_uuid=device_uuid)
         visitor.account.add(account)
@@ -55,9 +59,16 @@ class VisitorManager(models.Manager):
         account = get_current_account()
         visitor.account.add(account)
         return visitor
-    
+
     def is_visitor_in_account(self, visitor, account):
         return visitor.account.filter(id=account.id).exists()
+
+    def get_visitors_for_account(self, account):
+        return self.get_queryset().for_account(account)
+    
+    def get_visitors_with_analytics_for_account(self, account):
+        return self.get_queryset().with_analytics_for_account(account)
+
 
 class AnalyticsManager(models.Manager):
 

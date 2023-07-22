@@ -7,7 +7,7 @@ from rest_framework import status
 from app import custom_permissions
 from app.models import (Account, Visitor, Analytics)
 from app.serializers import (UserSerializer, AccountSerializer, VisitorSerializer,
-                             AnalyticsSerializer)
+                             VisitorWithAnalyticsSerializer, AnalyticsSerializer)
 from app.services import (AccountRegistrationService, VisitorService, AnalyticsService)
 from app.swagger_schemas import register_api_schema
 
@@ -41,6 +41,34 @@ class AccountViewSet(viewsets.ReadOnlyModelViewSet):
         account = get_current_account()
         queryset = Account.objects.filter(id=account.id)
         return queryset
+
+
+class VisitorViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    API endpoint that allows visitors to be viewed.
+
+    If the query parameter 'analytics' is set to 'true', the response will include analytics
+    data related to the visitors. Otherwise, only visitor data will be returned.
+    """
+    model = Visitor
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        account = get_current_account()
+        analytics = self.request.query_params.get('analytics', 'false').lower()
+        if analytics == 'true':
+            queryset = Visitor.objects.get_visitors_with_analytics_for_account(account)
+        else:
+            queryset = Visitor.objects.get_visitors_for_account(account)
+        return queryset
+
+    def get_serializer_class(self):
+        analytics = self.request.query_params.get('analytics', 'false').lower()
+        if analytics == 'true':
+            serializer_class = VisitorWithAnalyticsSerializer
+        else:
+            serializer_class = VisitorSerializer
+        return serializer_class
 
 
 class RegisterAPIView(views.APIView):
@@ -79,7 +107,7 @@ class VisitorReportAPIView(views.APIView):
     """
 
     model = Visitor
-    serializer = VisitorSerializer
+    serializer_class = VisitorSerializer
     permission_classes = [custom_permissions.AnonymousFromRegisteredSitePermission]
 
     def post(self, request):
@@ -96,7 +124,7 @@ class AnalyticsIngestionAPIView(views.APIView):
     """
 
     model = Analytics
-    serializer = AnalyticsSerializer
+    serializer_class = AnalyticsSerializer
     permission_classes = [custom_permissions.AnonymousFromRegisteredSitePermission]
 
     def post(self, request):

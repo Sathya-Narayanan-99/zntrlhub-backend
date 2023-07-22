@@ -4,6 +4,7 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
 from app import custom_exceptions
+from app.tenant import get_current_account
 
 from .models import Account, Visitor, Analytics
 
@@ -54,6 +55,15 @@ class VisitorSerializer(serializers.ModelSerializer):
         visitor = Visitor.objects.create_visitor(**validated_data)
         return visitor
 
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        account = get_current_account()
+        if Visitor.objects.is_visitor_in_account(visitor=instance, account=account):
+            data['account'] = account.id
+        else:
+            del data['account']
+        return data
+
 
 class AnalyticsSerializer(serializers.ModelSerializer):
     class Meta:
@@ -70,3 +80,7 @@ class AnalyticsSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         analytics = Analytics.objects.ingest_analytics(**validated_data)
         return analytics
+
+
+class VisitorWithAnalyticsSerializer(VisitorSerializer):
+    analytics = AnalyticsSerializer(many=True, read_only=True)
