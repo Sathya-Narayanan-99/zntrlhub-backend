@@ -4,19 +4,41 @@ from rest_framework import permissions
 from rest_framework.response import Response
 from rest_framework import status
 
+from app.models import Account
 from app.serializers import UserSerializer, AccountSerializer
 from app.services import AccountRegistrationService
 from app.swagger_schemas import register_api_schema
+
+from app.tenant import get_current_account
 
 User = get_user_model()
 
 class UserViewSet(viewsets.ReadOnlyModelViewSet):
     """
-    API endpoint that allows users to be viewed or edited.
+    API endpoint that allows users to be viewed.
     """
-    queryset = User.objects.all().order_by('-date_joined')
+    model = User
     serializer_class = UserSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        account = get_current_account()
+        queryset = User.objects.get_users_for_account(account=account).order_by('-date_joined')
+        return queryset
+
+
+class AccountViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    API endpoint that allows account to be viewed.
+    """
+    model = Account
+    serializer_class = AccountSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        account = get_current_account()
+        queryset = Account.objects.filter(id=account.id)
+        return queryset
 
 
 class RegisterAPIView(views.APIView):

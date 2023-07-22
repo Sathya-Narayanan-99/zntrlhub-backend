@@ -1,19 +1,14 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 
-from django_multitenant.models import TenantModel
-
 from . import managers
 
 
-class Account(TenantModel):
+class Account(models.Model):
     name = models.CharField(max_length=128)
     site = models.CharField(max_length=256, unique=True)
 
     objects = managers.AccountManager()
-
-    class TenantMeta:
-        tenant_field_name = 'id'
 
 
 class User(AbstractUser):
@@ -25,9 +20,6 @@ class User(AbstractUser):
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['first_name', 'last_name']
-
-    class TenantMeta:
-        tenant_field_name = 'account_id'
 
     def __str__(self):
         return self.get_full_name()

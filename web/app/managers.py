@@ -28,6 +28,9 @@ class UserManager(BaseUserManager):
 
         return self.create_user(email, password, **extra_fields)
 
+    def get_users_for_account(self, account):
+        return self.filter(account=account)
+
 
 class AccountManager(models.Manager):
 

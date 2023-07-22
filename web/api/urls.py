@@ -8,13 +8,15 @@ from rest_framework_simplejwt.views import (
 from . import views
 
 router = routers.DefaultRouter()
-router.register(r'users', views.UserViewSet)
+router.register(r'users', views.UserViewSet, basename='users')
+router.register(r'account', views.AccountViewSet, basename='account')
 
 urlpatterns = [
-    path('', include(router.urls)),
     path('token/', TokenObtainPairView.as_view(), name='token-obtain'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token-refresh'),
     path('api-auth/', include('rest_framework.urls', namespace='rest-framework')),
 
-    path('register/', views.RegisterAPIView.as_view(), name='register-view')
+    path('register/', views.RegisterAPIView.as_view(), name='register-view'),
+
+    path('', include(router.urls)),
 ]
