@@ -1,6 +1,7 @@
 from django.contrib.auth.models import BaseUserManager
 from django.db import models
 
+from app.tenant import get_current_account
 
 class UserManager(BaseUserManager):
 
@@ -39,3 +40,18 @@ class AccountManager(models.Manager):
     def create_account(self, name, site):
         account = self.create(name=name, site=site)
         return account
+
+
+class VisitorManager(models.Manager):
+
+    use_in_migrations = True
+
+    def create_visitor(self, name, whatsapp_number, device_uuid, account):
+        visitor = self.create(name=name, whatsapp_number=whatsapp_number, device_uuid=device_uuid)
+        visitor.account.add(account)
+        return visitor
+
+    def add_visitor_to_current_account(self, visitor):
+        account = get_current_account()
+        visitor.account.add(account)
+        return visitor

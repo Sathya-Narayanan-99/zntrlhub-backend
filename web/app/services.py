@@ -1,9 +1,11 @@
 from django.contrib.auth import get_user_model
 from django.db import transaction
 
-from .serializers import AccountSerializer, UserSerializer
+from app.tenant import get_current_account
+from app.custom_exceptions import VisitorAlreadyReported
 
-from .models import Account
+from .serializers import AccountSerializer, UserSerializer, VisitorSerializer
+from .models import Visitor
 
 User = get_user_model()
 
@@ -24,9 +26,29 @@ class AccountRegistrationService:
         if account_error or user_error:
             return account_error, user_error, None, None
 
-        validated_account_data = account_serializer.validated_data
-        validated_user_data = user_serializer.validated_data
-
-        account = Account.objects.create_account(**validated_account_data)
-        user = User.objects.create_user(**validated_user_data, account=account)
+        account = account_serializer.save()
+        user = user_serializer.save(account=account)
+        
         return None, None, account, user
+
+
+class VisitorService:
+    @classmethod
+    def report_visitor(cls, visitor_data):
+        account = get_current_account()
+        visitor_data['account'] = [account.id]
+        visitor_serializer = VisitorSerializer(data=visitor_data)
+        visitor_serializer.is_valid(raise_exception=True)
+
+        device_uuid = visitor_serializer.validated_data.get('device_uuid')
+
+        try:
+            visitor = Visitor.objects.prefetch_related('account').get(device_uuid=device_uuid)
+            if account not in visitor.account.all():
+                Visitor.objects.add_visitor_to_current_account(visitor=visitor)
+            else:
+                raise VisitorAlreadyReported
+        except Visitor.DoesNotExist:
+            visitor = visitor_serializer.save(account=account)
+        
+        return visitor
