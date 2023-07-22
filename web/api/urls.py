@@ -18,6 +18,7 @@ urlpatterns = [
 
     path('register/', views.RegisterAPIView.as_view(), name='register-view'),
     path('visitor/report/', views.VisitorReportAPIView.as_view(), name='visitor-report'),
+    path('analytics/ingest/', views.AnalyticsIngestionAPIView.as_view(), name='analytics-ingest'),
 
     path('', include(router.urls)),
 ]

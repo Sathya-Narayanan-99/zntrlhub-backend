@@ -55,3 +55,14 @@ class VisitorManager(models.Manager):
         account = get_current_account()
         visitor.account.add(account)
         return visitor
+    
+    def is_visitor_in_account(self, visitor, account):
+        return visitor.account.filter(id=account.id).exists()
+
+class AnalyticsManager(models.Manager):
+
+    use_in_migrations = True
+
+    def ingest_analytics(self, **analytics_data):
+        analytics = self.create(**analytics_data)
+        return analytics

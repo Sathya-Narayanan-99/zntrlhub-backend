@@ -5,9 +5,10 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from app import custom_permissions
-from app.models import Account, Visitor
-from app.serializers import UserSerializer, AccountSerializer, VisitorSerializer
-from app.services import AccountRegistrationService, VisitorService
+from app.models import (Account, Visitor, Analytics)
+from app.serializers import (UserSerializer, AccountSerializer, VisitorSerializer,
+                             AnalyticsSerializer)
+from app.services import (AccountRegistrationService, VisitorService, AnalyticsService)
 from app.swagger_schemas import register_api_schema
 
 from app.tenant import get_current_account
@@ -82,8 +83,24 @@ class VisitorReportAPIView(views.APIView):
     permission_classes = [custom_permissions.AnonymousFromRegisteredSitePermission]
 
     def post(self, request):
-        
+
         visitor_data = request.data
         VisitorService.report_visitor(visitor_data=visitor_data)
         return Response({'detail': 'Visitor reported.'},
+                        status=status.HTTP_200_OK)
+
+
+class AnalyticsIngestionAPIView(views.APIView):
+    """
+    API view for ingesting analytics.
+    """
+
+    model = Analytics
+    serializer = AnalyticsSerializer
+    permission_classes = [custom_permissions.AnonymousFromRegisteredSitePermission]
+
+    def post(self, request):
+        analytics_data = request.data
+        AnalyticsService.ingest_analytics(analytics_data=analytics_data)
+        return Response({'detail': 'Analytics data ingested.'},
                         status=status.HTTP_200_OK)

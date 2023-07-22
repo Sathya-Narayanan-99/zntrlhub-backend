@@ -3,7 +3,9 @@ from urllib.parse import urlparse
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
-from .models import Account, Visitor
+from app import custom_exceptions
+
+from .models import Account, Visitor, Analytics
 
 User = get_user_model()
 
@@ -51,3 +53,20 @@ class VisitorSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         visitor = Visitor.objects.create_visitor(**validated_data)
         return visitor
+
+
+class AnalyticsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Analytics
+        fields = '__all__'
+
+    def validate(self, attrs):
+        account = attrs.get('account')
+        visitor = attrs.get('visitor')
+        if not Visitor.objects.is_visitor_in_account(visitor, account):
+            raise custom_exceptions.VisitorNotReported
+        return super().validate(attrs)
+
+    def create(self, validated_data):
+        analytics = Analytics.objects.ingest_analytics(**validated_data)
+        return analytics

@@ -26,25 +26,27 @@ class User(AbstractUser):
 
 
 class Analytics(models.Model):
-    browser = models.CharField(max_length=64)
-    device = models.CharField(max_length=64)
+    browser = models.CharField(max_length=64, null=True, blank=True)
+    device = models.CharField(max_length=64, null=True, blank=True)
 
-    page_name = models.CharField(max_length=128)
-    page_url = models.URLField(max_length=2000)
+    page_name = models.CharField(max_length=128, null=True, blank=True)
+    page_url = models.URLField(max_length=2000, null=True, blank=True)
 
-    button_clicked = models.CharField(max_length=128)
+    button_clicked = models.CharField(max_length=128, null=True, blank=True)
 
-    latitude = models.FloatField()
-    longitude = models.FloatField()
-    location = models.CharField(max_length=128)
+    latitude = models.FloatField(null=True, blank=True)
+    longitude = models.FloatField(null=True, blank=True)
+    location = models.CharField(max_length=128, null=True, blank=True)
 
-    timezone = models.CharField(max_length=64)
-    time_stayed = models.DurationField()
+    timezone = models.CharField(max_length=64, null=True, blank=True)
+    time_stayed = models.DurationField(null=True, blank=True)
 
     created = models.DateTimeField(auto_now_add=True)
 
     account = models.ForeignKey(Account, related_name='analytics', on_delete=models.CASCADE)
     visitor = models.ForeignKey('Visitor', related_name='analytics', on_delete=models.CASCADE)
+
+    objects = managers.AnalyticsManager()
 
 
 class Visitor(models.Model):

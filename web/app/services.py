@@ -2,9 +2,10 @@ from django.contrib.auth import get_user_model
 from django.db import transaction
 
 from app.tenant import get_current_account
-from app.custom_exceptions import VisitorAlreadyReported
+from app.custom_exceptions import VisitorAlreadyReported, VisitorNotReported
 
-from .serializers import AccountSerializer, UserSerializer, VisitorSerializer
+from .serializers import (AccountSerializer, UserSerializer, VisitorSerializer,
+                          AnalyticsSerializer)
 from .models import Visitor
 
 User = get_user_model()
@@ -44,11 +45,32 @@ class VisitorService:
 
         try:
             visitor = Visitor.objects.prefetch_related('account').get(device_uuid=device_uuid)
-            if account not in visitor.account.all():
+            if not Visitor.objects.is_visitor_in_account(visitor, account):
                 Visitor.objects.add_visitor_to_current_account(visitor=visitor)
             else:
                 raise VisitorAlreadyReported
         except Visitor.DoesNotExist:
             visitor = visitor_serializer.save(account=account)
-        
+
         return visitor
+
+
+class AnalyticsService:
+    @classmethod
+    def ingest_analytics(cls, analytics_data):
+        device_uuid = analytics_data.get('device_uuid')
+        try:
+            visitor = Visitor.objects.get(device_uuid=device_uuid)
+        except Visitor.DoesNotExist:
+            raise VisitorNotReported
+        account = get_current_account()
+
+        analytics_data['visitor'] = visitor.id
+        analytics_data['account'] = account.id
+
+        analytics_serializer = AnalyticsSerializer(data=analytics_data)
+        analytics_serializer.is_valid(raise_exception=True)
+
+        analytics = analytics_serializer.save()
+
+        return analytics
