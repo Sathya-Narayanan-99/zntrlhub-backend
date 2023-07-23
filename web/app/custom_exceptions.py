@@ -10,5 +10,5 @@ class VisitorAlreadyReported(APIException):
 
 class VisitorNotReported(APIException):
     status_code = status.HTTP_404_NOT_FOUND
-    default_detail = 'visitor is not reported.'
+    default_detail = 'Visitor is not reported.'
     default_code = 'visitor_is_not_reported'

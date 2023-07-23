@@ -21,3 +21,9 @@ Once the containers are up and running, you can start using the zntrlhub-backend
 - Access the web server at `http://localhost:8000`.
 - Access the API documentation at `http://localhost:8000/redoc`. This provides detailed information about the available endpoints and how to interact with the API.
 - To perform any necessary configuration, check the respective configuration files or environment variables.
+
+## Filters
+
+This project uses `dj-rql` to provide RQL filtering support for the API endpoints. `dj-rql` seamlessly integrates with Django REST framework and allows for complex filtering and querying of data using RQL.
+
+For more details on RQL syntax and available filter options, you can refer to the RQL documentation at [https://django-rql.readthedocs.io/en/latest/]().

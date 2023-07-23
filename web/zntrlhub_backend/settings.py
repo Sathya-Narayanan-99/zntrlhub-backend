@@ -117,6 +117,8 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.BasicAuthentication',
         'app.backends.CustomAuthentication',
     ),
+    'EXCEPTION_HANDLER': 'app.custom_exception_handler.custom_exception_handler',
+    'DEFAULT_FILTER_BACKENDS': ['dj_rql.drf.RQLFilterBackend'],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
     'PAGE_SIZE': 20
 }

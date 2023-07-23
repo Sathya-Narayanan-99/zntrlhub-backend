@@ -1,13 +1,16 @@
 from django.contrib.auth import get_user_model
 from rest_framework import viewsets, views
 from rest_framework import permissions
-from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.decorators import action
 
 from app import custom_permissions
+from app import filters
 from app.models import (Account, Visitor, Analytics)
 from app.serializers import (UserSerializer, AccountSerializer, VisitorSerializer,
-                             VisitorWithAnalyticsSerializer, AnalyticsSerializer)
+                             VisitorWithAnalyticsSerializer, AnalyticsSerializer,
+                             AnalyticsWithVisitorSerializer)
 from app.services import (AccountRegistrationService, VisitorService, AnalyticsService)
 from app.swagger_schemas import register_api_schema
 
@@ -69,6 +72,33 @@ class VisitorViewSet(viewsets.ReadOnlyModelViewSet):
         else:
             serializer_class = VisitorSerializer
         return serializer_class
+
+
+class AnalyticsViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    API endpoint that allows analytics to be viewed.
+    """
+    model = Analytics
+    serializer_class = AnalyticsWithVisitorSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    rql_filter_class = filters.AnalyticsFilters
+
+    def get_queryset(self):
+        account = get_current_account()
+        queryset = Analytics.objects.get_analytics_for_account(account)
+        return queryset
+
+    @action(detail=False, methods=['GET'], rql_filter_class=[])
+    def distinct_page_names(self, request):
+        account = get_current_account()
+        page_names = Analytics.objects.get_distinct_page_names_for_account(account=account)
+        return Response(data=page_names)
+
+    @action(detail=False, methods=['GET'], rql_filter_class=[])
+    def distinct_button_clicked(self, request):
+        account = get_current_account()
+        button_clicked = Analytics.objects.get_distinct_button_clicked_for_account(account=account)
+        return Response(data=button_clicked)
 
 
 class RegisterAPIView(views.APIView):

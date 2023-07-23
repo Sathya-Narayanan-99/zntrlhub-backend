@@ -84,3 +84,7 @@ class AnalyticsSerializer(serializers.ModelSerializer):
 
 class VisitorWithAnalyticsSerializer(VisitorSerializer):
     analytics = AnalyticsSerializer(many=True, read_only=True)
+
+
+class AnalyticsWithVisitorSerializer(AnalyticsSerializer):
+    visitor = VisitorSerializer(read_only=True)

@@ -77,3 +77,12 @@ class AnalyticsManager(models.Manager):
     def ingest_analytics(self, **analytics_data):
         analytics = self.create(**analytics_data)
         return analytics
+    
+    def get_analytics_for_account(self, account):
+        return self.filter(account=account).prefetch_related('visitor')
+
+    def get_distinct_page_names_for_account(self, account):
+        return self.filter(account=account).values_list('page_name', flat=True).distinct()
+    
+    def get_distinct_button_clicked_for_account(self, account):
+        return self.filter(account=account).exclude(button_clicked="").values_list('button_clicked', flat=True).distinct()

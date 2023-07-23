@@ -39,7 +39,7 @@ class Analytics(models.Model):
     location = models.CharField(max_length=128, null=True, blank=True)
 
     timezone = models.CharField(max_length=64, null=True, blank=True)
-    time_stayed = models.DurationField(null=True, blank=True)
+    time_stayed = models.FloatField(null=True, blank=True)
 
     created = models.DateTimeField(auto_now_add=True)
 
