@@ -5,7 +5,7 @@ from app.tenant import get_current_account
 from app.custom_exceptions import VisitorAlreadyReported, VisitorNotReported
 
 from .serializers import (AccountSerializer, UserSerializer, VisitorSerializer,
-                          AnalyticsSerializer)
+                          AnalyticsSerializer, SegmentationSerializer)
 from .models import Visitor
 
 User = get_user_model()
@@ -74,3 +74,33 @@ class AnalyticsService:
         analytics = analytics_serializer.save()
 
         return analytics
+
+
+class SegmentationService:
+    @classmethod
+    def create(cls, data):
+        account = get_current_account()
+        data['account'] = account.id
+
+        segmentation_serializer = SegmentationSerializer(data=data)
+        segmentation_serializer.is_valid(raise_exception=True)
+
+        segmentation = segmentation_serializer.save()
+
+        return segmentation
+
+    @classmethod
+    def update(cls, instance, data, partial=False):
+        account = get_current_account()
+        data['account'] = account.id
+
+        segmentation_serializer = SegmentationSerializer(instance, data=data, partial=partial)
+        segmentation_serializer.is_valid(raise_exception=True)
+
+        segmentation = segmentation_serializer.save()
+
+        return segmentation
+
+    @classmethod
+    def delete(cls, instance):
+        instance.delete()

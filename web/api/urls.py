@@ -12,6 +12,7 @@ router.register(r'users', views.UserViewSet, basename='users')
 router.register(r'account', views.AccountViewSet, basename='account')
 router.register(r'visitor', views.VisitorViewSet, basename='visitor')
 router.register(r'analytics', views.AnalyticsViewSet, basename='analytics')
+router.register(r'segmentations', views.SegmentationViewset, basename='segmentations')
 
 urlpatterns = [
     path('token/', TokenObtainPairView.as_view(), name='token-obtain'),

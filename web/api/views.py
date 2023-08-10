@@ -7,11 +7,14 @@ from rest_framework.decorators import action
 
 from app import custom_permissions
 from app import filters
-from app.models import (Account, Visitor, Analytics)
+from app.viewsets import ServiceModelViewset
+from app.models import (Account, Visitor, Analytics,
+                        Segmentation)
 from app.serializers import (UserSerializer, AccountSerializer, VisitorSerializer,
                              VisitorWithAnalyticsSerializer, AnalyticsSerializer,
-                             AnalyticsWithVisitorSerializer)
-from app.services import (AccountRegistrationService, VisitorService, AnalyticsService)
+                             AnalyticsWithVisitorSerializer, SegmentationSerializer)
+from app.services import (AccountRegistrationService, VisitorService, AnalyticsService,
+                          SegmentationService)
 from app.swagger_schemas import register_api_schema
 
 from app.tenant import get_current_account
@@ -99,6 +102,18 @@ class AnalyticsViewSet(viewsets.ReadOnlyModelViewSet):
         account = get_current_account()
         button_clicked = Analytics.objects.get_distinct_button_clicked_for_account(account=account)
         return Response(data=button_clicked)
+
+
+class SegmentationViewset(ServiceModelViewset):
+    model = Segmentation
+    serializer_class = SegmentationSerializer
+    service_class = SegmentationService
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        account = get_current_account()
+        queryset = Segmentation.objects.get_segmentation_for_account(account=account)
+        return queryset
 
 
 class RegisterAPIView(views.APIView):
