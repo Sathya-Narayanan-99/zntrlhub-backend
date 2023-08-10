@@ -65,7 +65,7 @@ class VisitorManager(models.Manager):
 
     def get_visitors_for_account(self, account):
         return self.get_queryset().for_account(account)
-    
+
     def get_visitors_with_analytics_for_account(self, account):
         return self.get_queryset().with_analytics_for_account(account)
 
@@ -77,12 +77,35 @@ class AnalyticsManager(models.Manager):
     def ingest_analytics(self, **analytics_data):
         analytics = self.create(**analytics_data)
         return analytics
-    
+
     def get_analytics_for_account(self, account):
         return self.filter(account=account).prefetch_related('visitor')
 
     def get_distinct_page_names_for_account(self, account):
         return self.filter(account=account).values_list('page_name', flat=True).distinct()
-    
+
     def get_distinct_button_clicked_for_account(self, account):
         return self.filter(account=account).exclude(button_clicked="").values_list('button_clicked', flat=True).distinct()
+
+    def get_unique_visitor_count_for_account(self, account, query=None):
+        queryset = self.get_analytics_for_account(account=account)
+        if not query:
+            return queryset
+
+        from app.filters import AnalyticsFilters
+        analytics_filter = AnalyticsFilters(queryset)
+        _, filtered_queryset = analytics_filter.apply_filters(query=query)
+
+        return filtered_queryset.distinct('visitor').count()
+
+
+class SegmentationManager(models.Manager):
+
+    use_in_migrations = True
+
+    def create_segmentation(self, **segmentation_data):
+        segmentation = self.create(**segmentation_data)
+        return segmentation
+
+    def get_segmentation_for_account(self, account):
+        return self.filter(account=account)
