@@ -60,3 +60,15 @@ class Visitor(models.Model):
     account = models.ManyToManyField(Account, related_name='visitors')
 
     objects = managers.VisitorManager()
+
+
+class Segmentation(models.Model):
+    name = models.CharField(max_length=64)
+    rql_query = models.CharField(max_length=1000)
+
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
+
+    account = models.ForeignKey(Account, related_name='segmentations', on_delete=models.CASCADE)
+
+    objects = managers.SegmentationManager()
