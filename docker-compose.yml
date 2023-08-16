@@ -8,18 +8,66 @@ services:
     restart: always
     volumes:
       - ./web/:/usr/src/
+      - ./logs/celery:/var/log/celery
     ports:
       - 8000:8000
     env_file:
       - ./.env.dev
     tty: true
+    depends_on:
+      - redis
+      - db
+
   db:
     image: postgres:13.0-alpine
+    container_name: zntrlhub-db
     volumes:
       - postgres_data:/var/lib/postgresql/data/
     environment:
       - POSTGRES_USER=zntrlhub_dev
       - POSTGRES_PASSWORD=zntrlhub_dev_password
       - POSTGRES_DB=zntrlhub_local
+
+  redis:
+    image: redis:7-alpine
+    container_name: zntrlhub-redis
+    ports:
+      - 6379:6379
+
+  celery_worker:
+    build: ./web
+    image: celery_worker
+    container_name: zntrlhub-celery-worker
+    command: celery -A zntrlhub_backend worker -l INFO -f /var/log/celery/celery.log -Ofair
+    volumes:
+      - ./web/:/usr/src/
+      - ./logs/celery:/var/log/celery
+    env_file:
+      - ./.env.dev
+    depends_on:
+      - redis
+      - db
+
+  celery_beat:
+    build: ./web
+    image: celery_beat
+    container_name: zntrlhub-celery-beat
+    command: sh -c "rm -f './celerybeat.pid' && python manage.py setup_periodic_tasks && celery -A zntrlhub_backend beat -l INFO -f /var/log/celery/celery-scheduler.log"
+    volumes:
+      - ./web/:/usr/src/
+      - ./logs/celery:/var/log/celery
+    env_file:
+      - ./.env.dev
+    depends_on:
+      - redis
+      - db
+
+  flower:
+    image: mher/flower
+    container_name: zntrlhub-flower
+    env_file:
+      - ./.env.dev
+    ports:
+      - 5555:5555
 volumes:
   postgres_data:
