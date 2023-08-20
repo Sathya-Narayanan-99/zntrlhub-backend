@@ -132,3 +132,15 @@ class WatiTemplateManager(models.Manager):
     
     def flush_wati_template_for_account(self, account):
         return self.get_wati_template_for_account(account=account).delete()
+    
+
+class CampaignManager(models.Manager):
+
+    use_in_migrations = True
+
+    def create_campaign(self, **campaign_data):
+        campaign = self.create(**campaign_data)
+        return campaign
+
+    def get_campaign_for_account(self, account):
+        return self.filter(account=account)

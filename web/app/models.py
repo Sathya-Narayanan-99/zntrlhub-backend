@@ -97,3 +97,76 @@ class WatiTemplate(models.Model):
     account = models.ForeignKey(Account, related_name='wati_template', on_delete=models.CASCADE)
 
     objects = managers.WatiTemplateManager()
+
+
+class WatiMessage(models.Model):
+    wati_message_id = models.CharField(max_length=128, null=True, default=None)
+
+    message = models.ForeignKey('Message', related_name='wati_messages', on_delete=models.CASCADE)
+
+    visitor = models.ForeignKey(Visitor, related_name='wati_messages', on_delete=models.CASCADE)
+
+
+class Campaign(models.Model):
+
+    ACTIVE_STATE = 'A'
+    INACTIVE_STATE = 'I'
+    STATE_CHOICES = (
+        (ACTIVE_STATE, 'Active'),
+        (INACTIVE_STATE, 'Inactive')
+    )
+
+    name = models.CharField(max_length=128)
+    state = models.CharField(max_length=2, choices=STATE_CHOICES, default=ACTIVE_STATE)
+
+    message = models.ForeignKey('Message', related_name='campaigns', on_delete=models.CASCADE)
+    segment = models.ForeignKey(Segmentation, related_name='campaigns', on_delete=models.CASCADE)
+    account = models.ForeignKey(Account, related_name='campaigns', on_delete=models.CASCADE)
+
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
+
+    objects = managers.CampaignManager()
+
+
+class Message(models.Model):
+    MESSAGE_HEAD = 0
+    ON_MESSAGE_DELIVERED = 1
+    ON_MESSAGE_READ = 2
+    ON_MESSAGE_REPLIED = 3
+    NODE_ACTION_CHOICES = (
+        (MESSAGE_HEAD, 'Starting message'),
+        (ON_MESSAGE_DELIVERED, 'On message delivered'),
+        (ON_MESSAGE_READ, 'ON message read'),
+        (ON_MESSAGE_REPLIED, 'On message replied')
+    )
+    action = models.IntegerField(choices=NODE_ACTION_CHOICES, default=MESSAGE_HEAD)
+    schedule = models.IntegerField(null=True, default=1)
+
+    template = models.ForeignKey(WatiTemplate, related_name='messages', on_delete=models.CASCADE)
+
+    parent = models.ForeignKey('self', related_name='child_messages', on_delete=models.CASCADE, null=True)
+
+    campaign = models.ForeignKey(Campaign, related_name='messages', on_delete=models.CASCADE)
+    
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ('parent', 'action',)
+
+    def get_descendants(self):
+        descendants = Message.objects.filter(parent=self)
+        return descendants
+
+    def get_descendants_for_action_performed(self, action: int):
+        descendants = Message.objects.filter(parent=self, action=action)
+        return descendants
+
+    def get_ancestors(self):
+        ancestors = []
+        parent = self.parent
+        while parent is not None:
+            ancestors.append(parent)
+            parent = parent.parent
+        return ancestors

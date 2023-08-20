@@ -9,7 +9,7 @@ from app.tenant import get_current_account
 
 from .models import (Account, Visitor, Analytics,
                      Segmentation, WatiAttribute,
-                     WatiTemplate)
+                     WatiTemplate, Campaign, Message)
 
 User = get_user_model()
 
@@ -128,4 +128,18 @@ class WatiAttributeSerializer(serializers.ModelSerializer):
 class WatiTemplateSerializer(serializers.ModelSerializer):
     class Meta:
         model = WatiTemplate
+        fields = '__all__'
+
+
+class CampaignSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Campaign
+        fields = '__all__'
+
+
+class MessageSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Message
         fields = '__all__'
