@@ -11,6 +11,10 @@ then
     echo "PostgreSQL started"
 fi
 
-python manage.py migrate
+python manage.py migrate app --noinput || true
+python manage.py migrate admin --noinput || true
+python manage.py migrate sessions --noinput || true
+python manage.py migrate django_celery_results --noinput || true
+python manage.py migrate django_celery_beat --noinput || true
 
 exec "$@"
