@@ -23,5 +23,7 @@ urlpatterns = [
     path('visitor/report/', views.VisitorReportAPIView.as_view(), name='visitor-report'),
     path('analytics/ingest/', views.AnalyticsIngestionAPIView.as_view(), name='analytics-ingest'),
 
+    path('wati/auth/', views.WatiAuthAPIView.as_view(), name='wati-auth'),
+
     path('', include(router.urls)),
 ]

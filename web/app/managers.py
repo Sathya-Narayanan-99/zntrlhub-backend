@@ -109,3 +109,15 @@ class SegmentationManager(models.Manager):
 
     def get_segmentation_for_account(self, account):
         return self.filter(account=account)
+
+
+class WatiAttributeManager(models.Manager):
+
+    use_in_migrations = True
+
+    def get_wati_attribute_for_account(self, account):
+        try:
+            instance = self.get(account=account)
+        except self.model.DoesNotExist:
+            instance = self.create(account=account)
+        return instance
