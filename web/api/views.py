@@ -14,7 +14,7 @@ from app.serializers import (UserSerializer, AccountSerializer, VisitorSerialize
                              VisitorWithAnalyticsSerializer, AnalyticsSerializer,
                              AnalyticsWithVisitorSerializer, SegmentationSerializer)
 from app.services import (AccountRegistrationService, VisitorService, AnalyticsService,
-                          SegmentationService)
+                          SegmentationService, WatiService)
 from app.swagger_schemas import register_api_schema
 
 from app.tenant import get_current_account
@@ -177,3 +177,24 @@ class AnalyticsIngestionAPIView(views.APIView):
         AnalyticsService.ingest_analytics(analytics_data=analytics_data)
         return Response({'detail': 'Analytics data ingested.'},
                         status=status.HTTP_200_OK)
+
+
+class WatiAuthAPIView(views.APIView):
+    """
+    API View for authentication with wati
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        api_endpoint = request.data.get('api_endpoint')
+        api_key = request.data.get('api_key')
+        if not api_endpoint:
+            return Response({'detail':'api_endpoint is required.'},
+                            status=status.HTTP_400_BAD_REQUEST)
+        if not api_key:
+            return Response({'detail':'api_key is required.'},
+                            status=status.HTTP_400_BAD_REQUEST)
+        WatiService.update_credentials(api_endpoint=api_endpoint,
+                                                            api_key=api_key)
+        return Response({'detail':'Updated the credentials'},
+                            status=status.HTTP_200_OK)

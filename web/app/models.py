@@ -72,3 +72,28 @@ class Segmentation(models.Model):
     account = models.ForeignKey(Account, related_name='segmentations', on_delete=models.CASCADE)
 
     objects = managers.SegmentationManager()
+
+
+class WatiAttribute(models.Model):
+    api_endpoint = models.URLField(max_length=2000)
+    api_key = models.CharField(max_length=1000)
+
+    connected = models.BooleanField(default=False)
+
+    account = models.OneToOneField(Account, related_name='Wati_attribute', on_delete=models.CASCADE)
+
+    objects = managers.WatiAttributeManager()
+
+    def get_api_credentials(self):
+        return {
+        'api_endpoint': self.api_endpoint,
+        'api_key': self.api_key
+    }
+
+
+class WatiTemplate(models.Model):
+    template = models.JSONField(default=dict)
+
+    account = models.ForeignKey(Account, related_name='wati_template', on_delete=models.CASCADE)
+
+    objects = managers.WatiTemplateManager()

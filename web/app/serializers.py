@@ -8,7 +8,8 @@ from app import custom_exceptions
 from app.tenant import get_current_account
 
 from .models import (Account, Visitor, Analytics,
-                     Segmentation)
+                     Segmentation, WatiAttribute,
+                     WatiTemplate)
 
 User = get_user_model()
 
@@ -112,3 +113,19 @@ class SegmentationSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         segmentation = Segmentation.objects.create_segmentation(**validated_data)
         return segmentation
+
+
+class WatiAttributeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = WatiAttribute
+        fields = '__all__'
+        extra_kwargs = {
+            'api_endpoint': {'write_only': True},
+            'api_key': {'write_only': True}
+        }
+
+
+class WatiTemplateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = WatiTemplate
+        fields = '__all__'

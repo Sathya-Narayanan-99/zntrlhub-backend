@@ -2,11 +2,12 @@ from django.contrib.auth import get_user_model
 from django.db import transaction
 
 from app.tenant import get_current_account
-from app.custom_exceptions import VisitorAlreadyReported, VisitorNotReported
+from app.custom_exceptions import VisitorAlreadyReported, VisitorNotReported, WatiConnectionError
+from app.wati import Wati
 
 from .serializers import (AccountSerializer, UserSerializer, VisitorSerializer,
-                          AnalyticsSerializer, SegmentationSerializer)
-from .models import Visitor
+                          AnalyticsSerializer, SegmentationSerializer, WatiAttributeSerializer)
+from .models import Visitor, WatiAttribute, WatiTemplate
 
 User = get_user_model()
 
@@ -104,3 +105,72 @@ class SegmentationService:
     @classmethod
     def delete(cls, instance):
         instance.delete()
+
+
+class WatiService:
+    @classmethod
+    def update_credentials(cls, api_endpoint, api_key):
+        account = get_current_account()
+
+        data = {
+            'api_endpoint': api_endpoint,
+            'api_key': api_key
+        }
+
+        instance = WatiAttribute.objects.get_wati_attribute_for_account(account=account)
+
+        wati_attribute_serializer = WatiAttributeSerializer(instance, data=data, partial=True)
+        wati_attribute_serializer.is_valid(raise_exception=True)
+        wati_attribute_serializer.save()
+        instance = wati_attribute_serializer.instance
+
+        WatiService.update_connection_status(wati_attribute=instance, raise_exception=True)
+
+        return instance
+
+    @classmethod
+    def update_connection_status(cls, wati_attribute, commit=True, raise_exception=False):
+        status = WatiService.get_connection_status(wati_attribute=wati_attribute)
+        wati_attribute.connected = status
+
+        if commit:
+            wati_attribute.save()
+
+        if raise_exception:
+            if status is False:
+                raise WatiConnectionError
+
+        return wati_attribute
+
+    @classmethod
+    def get_connection_status(cls, wati_attribute):
+        wati = Wati(**wati_attribute.get_api_credentials())
+        return wati.get_connection_status()
+    
+    @classmethod
+    def update_template_for_account(cls, account=None):
+        if not account:
+            account = get_current_account()
+
+        WatiTemplate.objects.flush_wati_template_for_account(account=account)
+
+        wati_attribute = WatiAttribute.objects.get_wati_attribute_for_account(account=account)
+        wati = Wati(**wati_attribute.get_api_credentials())
+
+        page_number = 1
+        all_templates = []
+        while True:
+            templates = wati.get_templates(page_number=page_number)
+
+            if not templates:
+                break
+
+            all_templates.extend(templates)
+            page_number += 1
+
+        instances = []
+        for template in all_templates:
+            instance = WatiTemplate(template=template, account=account)
+            instances.append(instance)
+
+        WatiTemplate.objects.bulk_create(instances)
