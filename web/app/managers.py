@@ -121,3 +121,14 @@ class WatiAttributeManager(models.Manager):
         except self.model.DoesNotExist:
             instance = self.create(account=account)
         return instance
+
+
+class WatiTemplateManager(models.Manager):
+
+    use_in_migrations = True
+
+    def get_wati_template_for_account(self, account):
+        return self.filter(account=account)
+    
+    def flush_wati_template_for_account(self, account):
+        return self.get_wati_template_for_account(account=account).delete()

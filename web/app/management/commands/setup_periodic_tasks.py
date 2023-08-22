@@ -3,7 +3,7 @@ from django.db import transaction
 
 from django_celery_beat.models import PeriodicTask, CrontabSchedule
 
-from app.tasks import add
+from app.tasks import add, update_wati_template
 
 
 class Command(BaseCommand):
@@ -26,11 +26,25 @@ class Command(BaseCommand):
             month_of_year='*'
         )
 
+        cron_every_15_minutes = CrontabSchedule.objects.create(
+            minute='*/15',
+            hour='*',
+            day_of_week='*',
+            day_of_month='*',
+            month_of_year='*'
+        )
+
         periodic_tasks_data = [
             {
                 'task': add,
                 'name': 'Test for scheduling add method',
                 'schedule': cron_every_5_minutes,
+                'expire_seconds': 60
+            },
+            {
+                'task': update_wati_template,
+                'name': 'Task to update wati templates',
+                'schedule': cron_every_15_minutes,
                 'expire_seconds': 60
             }
         ]

@@ -89,3 +89,11 @@ class WatiAttribute(models.Model):
         'api_endpoint': self.api_endpoint,
         'api_key': self.api_key
     }
+
+
+class WatiTemplate(models.Model):
+    template = models.JSONField(default=dict)
+
+    account = models.ForeignKey(Account, related_name='wati_template', on_delete=models.CASCADE)
+
+    objects = managers.WatiTemplateManager()

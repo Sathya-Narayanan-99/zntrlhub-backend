@@ -7,7 +7,7 @@ from app.wati import Wati
 
 from .serializers import (AccountSerializer, UserSerializer, VisitorSerializer,
                           AnalyticsSerializer, SegmentationSerializer, WatiAttributeSerializer)
-from .models import Visitor, WatiAttribute
+from .models import Visitor, WatiAttribute, WatiTemplate
 
 User = get_user_model()
 
@@ -146,3 +146,31 @@ class WatiService:
     def get_connection_status(cls, wati_attribute):
         wati = Wati(**wati_attribute.get_api_credentials())
         return wati.get_connection_status()
+    
+    @classmethod
+    def update_template_for_account(cls, account=None):
+        if not account:
+            account = get_current_account()
+
+        WatiTemplate.objects.flush_wati_template_for_account(account=account)
+
+        wati_attribute = WatiAttribute.objects.get_wati_attribute_for_account(account=account)
+        wati = Wati(**wati_attribute.get_api_credentials())
+
+        page_number = 1
+        all_templates = []
+        while True:
+            templates = wati.get_templates(page_number=page_number)
+
+            if not templates:
+                break
+
+            all_templates.extend(templates)
+            page_number += 1
+
+        instances = []
+        for template in all_templates:
+            instance = WatiTemplate(template=template, account=account)
+            instances.append(instance)
+
+        WatiTemplate.objects.bulk_create(instances)

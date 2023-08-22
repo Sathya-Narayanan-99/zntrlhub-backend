@@ -10,7 +10,7 @@ class Wati:
             "Authorization": self.api_key
         }
 
-    def get_templates(self, page_size=100, page_number=1):
+    def get_templates(self, page_size=500, page_number=1):
         url = f"{self.api_endpoint}/api/v1/getMessageTemplates"
         params = {
             "pageSize": page_size,
@@ -23,7 +23,7 @@ class Wati:
             # TODO: Handle exceptions
             print(str(exc))
             raise exc
-        templates = res.json()
+        templates = res.json().get('messageTemplates')
         return templates
 
     def get_messages_for_number(self, number, page_size=100, page_number=1):
