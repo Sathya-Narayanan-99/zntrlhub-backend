@@ -74,6 +74,13 @@ class Segmentation(models.Model):
     objects = managers.SegmentationManager()
 
 
+class VisitorSegmentationMap(models.Model):
+    visitor = models.OneToOneField(Visitor, on_delete=models.CASCADE)
+    segmentation = models.OneToOneField(Segmentation, on_delete=models.CASCADE)
+
+    created = models.DateTimeField(auto_now_add=True)
+
+
 class WatiAttribute(models.Model):
     api_endpoint = models.URLField(max_length=2000)
     api_key = models.CharField(max_length=1000)

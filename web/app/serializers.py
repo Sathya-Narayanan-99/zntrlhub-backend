@@ -94,16 +94,9 @@ class AnalyticsWithVisitorSerializer(AnalyticsSerializer):
 
 
 class SegmentationSerializer(serializers.ModelSerializer):
-    visitor_count = serializers.SerializerMethodField()
     class Meta:
         model = Segmentation
         fields = '__all__'
-
-    def get_visitor_count(self, instance):
-        query = instance.rql_query
-        account = get_current_account()
-        count = Analytics.objects.get_unique_visitor_count_for_account(account=account, query=query)
-        return count
 
     def validate_rql_query(self, value):
         RQLParser.parse_query(value)

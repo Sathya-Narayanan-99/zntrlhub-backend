@@ -7,7 +7,7 @@ from app.wati import Wati
 
 from .serializers import (AccountSerializer, UserSerializer, VisitorSerializer,
                           AnalyticsSerializer, SegmentationSerializer, WatiAttributeSerializer)
-from .models import Visitor, WatiAttribute, WatiTemplate
+from .models import Analytics, Visitor, WatiAttribute, WatiTemplate, VisitorSegmentationMap
 
 User = get_user_model()
 
@@ -105,6 +105,18 @@ class SegmentationService:
     @classmethod
     def delete(cls, instance):
         instance.delete()
+
+    @classmethod
+    def update_visitor_segmentation_mapping(cls, segmentation):
+        VisitorSegmentationMap.objects.filter(segmentation=segmentation).delete()
+        visitors = Analytics.objects.get_unique_visitor_for_account(account=segmentation.account,
+                                                                    query=segmentation.rql_query)
+        visitor_segmentation_map_objs = []
+        for visitor in visitors:
+            visitor_segmentation_map = VisitorSegmentationMap.objects.create(visitor_id=visitor,
+                                                                        segmentation=segmentation)
+            visitor_segmentation_map_objs.append(visitor_segmentation_map)
+        return visitor_segmentation_map_objs
 
 
 class WatiService:
