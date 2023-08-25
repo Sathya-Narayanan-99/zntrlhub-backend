@@ -6,7 +6,8 @@ from app.custom_exceptions import VisitorAlreadyReported, VisitorNotReported, Wa
 from app.wati import Wati
 
 from .serializers import (AccountSerializer, UserSerializer, VisitorSerializer,
-                          AnalyticsSerializer, SegmentationSerializer, WatiAttributeSerializer)
+                          AnalyticsSerializer, SegmentationSerializer, WatiAttributeSerializer,
+                          CampaignSerializer, MessageSerializer)
 from .models import Visitor, WatiAttribute, WatiTemplate
 
 User = get_user_model()
@@ -174,3 +175,47 @@ class WatiService:
             instances.append(instance)
 
         WatiTemplate.objects.bulk_create(instances)
+
+
+class CampaignService:
+    @classmethod
+    def create(cls, data):
+        account = get_current_account()
+        data['account'] = account.id
+
+        campaign_serializer = CampaignSerializer(data=data)
+        campaign_serializer.is_valid(raise_exception=True)
+
+        campaign = campaign_serializer.save()
+
+        return campaign
+
+    @classmethod
+    def update(cls, instance, data, partial=False):
+        account = get_current_account()
+        data['account'] = account.id
+
+        campaign_serializer = CampaignSerializer(instance, data=data, partial=partial)
+        campaign_serializer.is_valid(raise_exception=True)
+
+        campaign = campaign_serializer.save()
+
+        return campaign
+
+    @classmethod
+    def delete(cls, instance):
+        instance.delete()
+
+
+class MessageService:
+    @classmethod
+    def create(cls, data):
+        message_serializer = MessageSerializer(data=data)
+        message_serializer.is_valid(raise_exception=True)
+
+        message = message_serializer.save()
+        return message
+
+    @classmethod
+    def delete(cls, instance):
+        instance.delete()

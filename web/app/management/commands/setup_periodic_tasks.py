@@ -3,7 +3,7 @@ from django.db import transaction
 
 from django_celery_beat.models import PeriodicTask, CrontabSchedule
 
-from app.tasks import add, update_wati_template
+from app.tasks import update_wati_template
 
 
 class Command(BaseCommand):
@@ -13,18 +13,10 @@ class Command(BaseCommand):
 
     @transaction.atomic
     def handle(self, *args, **kwargs):
-        print('Deleting all periodic tasks and schedules...\n')
+        print('Setting up all periodic tasks.')
 
         PeriodicTask.objects.all().delete()
         CrontabSchedule.objects.all().delete()
-
-        cron_every_5_minutes = CrontabSchedule.objects.create(
-            minute='*/5',
-            hour='*',
-            day_of_week='*',
-            day_of_month='*',
-            month_of_year='*'
-        )
 
         cron_every_15_minutes = CrontabSchedule.objects.create(
             minute='*/15',
@@ -35,12 +27,6 @@ class Command(BaseCommand):
         )
 
         periodic_tasks_data = [
-            {
-                'task': add,
-                'name': 'Test for scheduling add method',
-                'schedule': cron_every_5_minutes,
-                'expire_seconds': 60
-            },
             {
                 'task': update_wati_template,
                 'name': 'Task to update wati templates',

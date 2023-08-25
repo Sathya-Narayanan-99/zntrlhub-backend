@@ -1,4 +1,5 @@
 import requests
+from app.models import WatiMessage, Visitor
 
 class Wati:
     def __init__(self, api_endpoint, api_key):
@@ -42,7 +43,7 @@ class Wati:
         messages = res.json()
         return messages
 
-    def send_tempate_messages(self, template_name, broadcast_name, recievers):
+    def send_tempate_messages(self, template_name, broadcast_name, recievers, message):
         url = f"{self.api_endpoint}/api/v1/sendTemplateMessages"
         payload = {
             "template_name": template_name,
@@ -56,6 +57,8 @@ class Wati:
             # TODO: Handle exceptions
             print(str(exc))
             raise exc
+        
+        self.add_wati_message_id_to_message_obj(recievers, message)
         return res.json()
 
     def get_connection_status(self):
@@ -67,3 +70,20 @@ class Wati:
         except Exception as exc:
             print(str(exc))
             return False
+        
+    def add_wati_message_id_to_message_obj(self, receivers, message):
+        for receiver_obj in receivers:
+            receiver_phone_number = receiver_obj['whatsappNumber']
+            message_response = self.get_messages_for_number(
+                number=receiver_phone_number,
+                page_size=1
+            )
+
+            wati_message_id = message_response['messages']['items'][0]['id']
+            visitor = Visitor.objects.get(id=receiver_phone_number)
+            WatiMessage.objects.create(
+                wati_message_id=wati_message_id,
+                message=message,
+                visitor=visitor
+            )
+

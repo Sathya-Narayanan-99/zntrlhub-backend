@@ -9,12 +9,13 @@ from app import custom_permissions
 from app import filters
 from app.viewsets import ServiceModelViewset
 from app.models import (Account, Visitor, Analytics,
-                        Segmentation)
+                        Segmentation, Campaign, Message)
 from app.serializers import (UserSerializer, AccountSerializer, VisitorSerializer,
                              VisitorWithAnalyticsSerializer, AnalyticsSerializer,
-                             AnalyticsWithVisitorSerializer, SegmentationSerializer)
+                             AnalyticsWithVisitorSerializer, SegmentationSerializer,
+                             CampaignSerializer, MessageSerializer)
 from app.services import (AccountRegistrationService, VisitorService, AnalyticsService,
-                          SegmentationService, WatiService)
+                          SegmentationService, WatiService, CampaignService, MessageService)
 from app.swagger_schemas import register_api_schema
 
 from app.tenant import get_current_account
@@ -114,6 +115,26 @@ class SegmentationViewset(ServiceModelViewset):
         account = get_current_account()
         queryset = Segmentation.objects.get_segmentation_for_account(account=account)
         return queryset
+
+
+class CampaignViewset(ServiceModelViewset):
+    model = Campaign
+    serializer_class = CampaignSerializer
+    service_class = CampaignService
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        account = get_current_account()
+        queryset = Campaign.objects.get_campaign_for_account(account=account)
+        return queryset
+
+
+class MessageViewset(ServiceModelViewset):
+    model = Message
+    serializer_class = MessageSerializer
+    service_class = MessageService
+    permission_classes = [permissions.IsAuthenticated]
+
 
 
 class RegisterAPIView(views.APIView):
