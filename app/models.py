@@ -73,6 +73,19 @@ class Segmentation(models.Model):
 
     objects = managers.SegmentationManager()
 
+    def get_campaigns(self):
+        return self.campaigns.all()
+
+
+class VisitorSegmentationMap(models.Model):
+    visitor = models.ForeignKey(Visitor, on_delete=models.CASCADE)
+    segmentation = models.ForeignKey(Segmentation, on_delete=models.CASCADE)
+
+    created = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        unique_together = ('visitor', 'segmentation')
+
 
 class WatiAttribute(models.Model):
     api_endpoint = models.URLField(max_length=2000)
@@ -119,7 +132,6 @@ class Campaign(models.Model):
     name = models.CharField(max_length=128)
     state = models.CharField(max_length=2, choices=STATE_CHOICES, default=ACTIVE_STATE)
 
-    message = models.ForeignKey('Message', related_name='campaigns', on_delete=models.CASCADE)
     segment = models.ForeignKey(Segmentation, related_name='campaigns', on_delete=models.CASCADE)
     account = models.ForeignKey(Account, related_name='campaigns', on_delete=models.CASCADE)
 
@@ -143,7 +155,7 @@ class Message(models.Model):
     action = models.IntegerField(choices=NODE_ACTION_CHOICES, default=MESSAGE_HEAD)
     schedule = models.IntegerField(null=True, default=1)
 
-    template = models.ForeignKey(WatiTemplate, related_name='messages', on_delete=models.CASCADE)
+    template = models.CharField(max_length=1024)
 
     parent = models.ForeignKey('self', related_name='child_messages', on_delete=models.CASCADE, null=True)
 
@@ -154,6 +166,14 @@ class Message(models.Model):
 
     class Meta:
         unique_together = ('parent', 'action',)
+
+    def get_head_message(self):
+        head = self
+        parent = self.parent
+        while parent is not None:
+            head = parent
+            parent = parent.parent
+        return head
 
     def get_descendants(self):
         descendants = Message.objects.filter(parent=self)

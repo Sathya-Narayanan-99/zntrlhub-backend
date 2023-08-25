@@ -3,7 +3,7 @@ from django.db import transaction
 
 from django_celery_beat.models import PeriodicTask, CrontabSchedule
 
-from app.tasks import update_wati_template
+from app.tasks import update_wati_template, sync_visitors_for_segmentation
 
 
 class Command(BaseCommand):
@@ -30,6 +30,12 @@ class Command(BaseCommand):
             {
                 'task': update_wati_template,
                 'name': 'Task to update wati templates',
+                'schedule': cron_every_15_minutes,
+                'expire_seconds': 60
+            },
+            {
+                'task': sync_visitors_for_segmentation,
+                'name': 'Task to sync visitors for segmentation',
                 'schedule': cron_every_15_minutes,
                 'expire_seconds': 60
             }

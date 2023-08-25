@@ -87,7 +87,7 @@ class AnalyticsManager(models.Manager):
     def get_distinct_button_clicked_for_account(self, account):
         return self.filter(account=account).exclude(button_clicked="").values_list('button_clicked', flat=True).distinct()
 
-    def get_unique_visitor_count_for_account(self, account, query=None):
+    def get_unique_visitor_for_account(self, account, query=None):
         queryset = self.get_analytics_for_account(account=account)
         if not query:
             return queryset
@@ -95,8 +95,9 @@ class AnalyticsManager(models.Manager):
         from app.filters import AnalyticsFilters
         analytics_filter = AnalyticsFilters(queryset)
         _, filtered_queryset = analytics_filter.apply_filters(query=query)
+        visitor_ids = [item['visitor'] for item in filtered_queryset.distinct('visitor').values('visitor')]
 
-        return filtered_queryset.distinct('visitor').count()
+        return visitor_ids
 
 
 class SegmentationManager(models.Manager):

@@ -13,9 +13,10 @@ from app.models import (Account, Visitor, Analytics,
 from app.serializers import (UserSerializer, AccountSerializer, VisitorSerializer,
                              VisitorWithAnalyticsSerializer, AnalyticsSerializer,
                              AnalyticsWithVisitorSerializer, SegmentationSerializer,
-                             CampaignSerializer, MessageSerializer)
+                             CampaignSerializer, MessageSerializer, WatiTemplateSerializer)
 from app.services import (AccountRegistrationService, VisitorService, AnalyticsService,
-                          SegmentationService, WatiService, CampaignService, MessageService)
+                          SegmentationService, WatiService, CampaignService, MessageService,
+                          WatiTemplate)
 from app.swagger_schemas import register_api_schema
 
 from app.tenant import get_current_account
@@ -135,6 +136,19 @@ class MessageViewset(ServiceModelViewset):
     service_class = MessageService
     permission_classes = [permissions.IsAuthenticated]
 
+    def get_queryset(self):
+        account = get_current_account()
+        return self.model.objects.filter(campaign__account=account)
+    
+
+class TemplateViewset(viewsets.ReadOnlyModelViewSet):
+    model = WatiTemplate
+    serializer_class = WatiTemplateSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        account = get_current_account()
+        return self.model.objects.filter(account=account)
 
 
 class RegisterAPIView(views.APIView):
@@ -219,3 +233,11 @@ class WatiAuthAPIView(views.APIView):
                                                             api_key=api_key)
         return Response({'detail':'Updated the credentials'},
                             status=status.HTTP_200_OK)
+
+
+# class WatiEventsAPIView(views.APIView):
+#     permission_classes = [permissions.AllowAny]
+
+#     def post(self, request):
+#         WatiService.process_wati_event(request.data)
+#         return Response(status=status.HTTP_200_OK)
