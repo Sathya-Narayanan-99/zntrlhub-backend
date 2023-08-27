@@ -2,12 +2,13 @@ version: '3.8'
 
 services:
   web:
-    build: ./web
+    build:
+      dockerfile: Dockerfile
     container_name: zntrlhub-web
     command: python manage.py runserver 0.0.0.0:8000
     restart: always
     volumes:
-      - ./web/:/usr/src/
+      - ./:/usr/src/
       - ./logs/celery:/var/log/celery
     ports:
       - 8000:8000
@@ -35,12 +36,13 @@ services:
       - 6379:6379
 
   celery_worker:
-    build: ./web
+    build:
+      dockerfile: Dockerfile
     image: celery_worker
     container_name: zntrlhub-celery-worker
     command: celery -A zntrlhub_backend worker -l INFO -f /var/log/celery/celery.log -Ofair
     volumes:
-      - ./web/:/usr/src/
+      - ./:/usr/src/
       - ./logs/celery:/var/log/celery
     env_file:
       - ./.env.dev
@@ -49,12 +51,13 @@ services:
       - db
 
   celery_beat:
-    build: ./web
+    build:
+      dockerfile: Dockerfile
     image: celery_beat
     container_name: zntrlhub-celery-beat
     command: sh -c "rm -f './celerybeat.pid' && python manage.py setup_periodic_tasks && celery -A zntrlhub_backend beat -l INFO -f /var/log/celery/celery-scheduler.log"
     volumes:
-      - ./web/:/usr/src/
+      - ./:/usr/src/
       - ./logs/celery:/var/log/celery
     env_file:
       - ./.env.dev
