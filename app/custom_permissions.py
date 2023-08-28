@@ -1,3 +1,5 @@
+from urllib.parse import urlparse
+
 from rest_framework.permissions import BasePermission
 from app.tenant import get_current_account
 
@@ -12,7 +14,10 @@ class AnonymousFromRegisteredSitePermission(BasePermission):
             if not current_account:
                 return False
 
-            site = request.get_host()
+            site = request.META.get('HTTP_ORIGIN')
+            if site:
+                parsed_url = urlparse(site)
+                site = parsed_url.netloc.strip()
             return site == current_account.site
 
         return False
