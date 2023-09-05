@@ -50,7 +50,7 @@ class Analytics(models.Model):
 
 
 class Visitor(models.Model):
-    name = models.CharField(max_length=64)
+    name = models.CharField(max_length=64, null=True, blank=True)
     whatsapp_number = models.CharField(max_length=32)
     device_uuid = models.UUIDField()
 

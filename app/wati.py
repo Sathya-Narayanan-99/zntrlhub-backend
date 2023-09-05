@@ -87,3 +87,26 @@ class Wati:
                 visitor=visitor
             )
 
+    def get_contacts(self, whatsapp_number):
+        url = f"{self.api_endpoint}/api/v1/getContacts"
+        attribute = [{
+            "name": "phone",
+            "operator": "==",
+            "value": whatsapp_number
+        }]
+        url += f'?attribute={attribute}'
+        try:
+            res = requests.get(url, headers=self._get_headers(), timeout=90)
+            res.raise_for_status()
+        except Exception as exc:
+            # TODO: Handle exceptions
+            print(str(exc))
+            raise exc
+        contacts = res.json().get('contact_list')
+        return contacts
+
+    def get_name_for_number(self, whatsapp_number):
+        contacts = self.get_contacts(whatsapp_number=whatsapp_number)
+        if contacts:
+            contact = contacts[0]
+            return contact.get('fullName')

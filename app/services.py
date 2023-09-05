@@ -59,6 +59,23 @@ class VisitorService:
 
         return visitor
 
+    @classmethod
+    def update_visitor_name(cls, visitor, visitor_name):
+        visitor.name = visitor_name
+        visitor.save()
+
+        return visitor
+    
+    @classmethod
+    def sync_name_for_visitors_for_account(cls, account):
+        visitors = Visitor.objects.get_visitors_without_name_for_account(account=account)
+        wati_attribute = WatiAttribute.objects.get_wati_attribute_for_account(account=account)
+        wati = Wati(**wati_attribute.get_api_credentials())
+        for visitor in visitors:
+            name = wati.get_name_for_number(whatsapp_number=visitor.whatsapp_number)
+            if name:
+                VisitorService.update_visitor_name(visitor, name)
+
 
 class AnalyticsService:
     @classmethod

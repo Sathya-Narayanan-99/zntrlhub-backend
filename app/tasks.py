@@ -3,7 +3,7 @@ from celery.utils.log import get_task_logger
 from datetime import datetime
 
 from app.models import WatiAttribute, Segmentation, Message
-from app.services import WatiService, SegmentationService
+from app.services import WatiService, SegmentationService, VisitorService
 from app.wati import Wati
 
 
@@ -15,6 +15,14 @@ def update_wati_template():
     wati_attributes = WatiAttribute.objects.filter(connected=True)
     for wati_attribute in wati_attributes:
         WatiService.update_template_for_account(account=wati_attribute.account)
+
+
+@shared_task
+def sync_visitors_name():
+    wati_attributes = WatiAttribute.objects.filter(connected=True)
+    for wati_attribute in wati_attributes:
+        VisitorService.sync_name_for_visitors_for_account(account=wati_attribute.account)
+
 
 @shared_task
 def sync_visitors_for_segmentation():
