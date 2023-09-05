@@ -9,12 +9,14 @@ from app import custom_permissions
 from app import filters
 from app.viewsets import ServiceModelViewset
 from app.models import (Account, Visitor, Analytics,
-                        Segmentation)
+                        Segmentation, Campaign, Message)
 from app.serializers import (UserSerializer, AccountSerializer, VisitorSerializer,
                              VisitorWithAnalyticsSerializer, AnalyticsSerializer,
-                             AnalyticsWithVisitorSerializer, SegmentationSerializer)
+                             AnalyticsWithVisitorSerializer, SegmentationSerializer,
+                             CampaignSerializer, MessageSerializer, WatiTemplateSerializer)
 from app.services import (AccountRegistrationService, VisitorService, AnalyticsService,
-                          SegmentationService)
+                          SegmentationService, WatiService, CampaignService, MessageService,
+                          WatiTemplate)
 from app.swagger_schemas import register_api_schema
 
 from app.tenant import get_current_account
@@ -116,6 +118,39 @@ class SegmentationViewset(ServiceModelViewset):
         return queryset
 
 
+class CampaignViewset(ServiceModelViewset):
+    model = Campaign
+    serializer_class = CampaignSerializer
+    service_class = CampaignService
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        account = get_current_account()
+        queryset = Campaign.objects.get_campaign_for_account(account=account)
+        return queryset
+
+
+class MessageViewset(ServiceModelViewset):
+    model = Message
+    serializer_class = MessageSerializer
+    service_class = MessageService
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        account = get_current_account()
+        return self.model.objects.filter(campaign__account=account)
+    
+
+class TemplateViewset(viewsets.ReadOnlyModelViewSet):
+    model = WatiTemplate
+    serializer_class = WatiTemplateSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        account = get_current_account()
+        return self.model.objects.filter(account=account)
+
+
 class RegisterAPIView(views.APIView):
     """
     API view for registering a new account and user.
@@ -177,3 +212,32 @@ class AnalyticsIngestionAPIView(views.APIView):
         AnalyticsService.ingest_analytics(analytics_data=analytics_data)
         return Response({'detail': 'Analytics data ingested.'},
                         status=status.HTTP_200_OK)
+
+
+class WatiAuthAPIView(views.APIView):
+    """
+    API View for authentication with wati
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        api_endpoint = request.data.get('api_endpoint')
+        api_key = request.data.get('api_key')
+        if not api_endpoint:
+            return Response({'detail':'api_endpoint is required.'},
+                            status=status.HTTP_400_BAD_REQUEST)
+        if not api_key:
+            return Response({'detail':'api_key is required.'},
+                            status=status.HTTP_400_BAD_REQUEST)
+        WatiService.update_credentials(api_endpoint=api_endpoint,
+                                                            api_key=api_key)
+        return Response({'detail':'Updated the credentials'},
+                            status=status.HTTP_200_OK)
+
+
+# class WatiEventsAPIView(views.APIView):
+#     permission_classes = [permissions.AllowAny]
+
+#     def post(self, request):
+#         WatiService.process_wati_event(request.data)
+#         return Response(status=status.HTTP_200_OK)

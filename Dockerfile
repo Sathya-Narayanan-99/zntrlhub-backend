@@ -25,5 +25,9 @@ RUN chmod +x /usr/src/entrypoint.sh
 # copy project
 COPY . .
 
+RUN mkdir /var/log/celery/
+RUN touch /var/log/celery/celery.log
+RUN touch /var/log/celery/celery-scheduler.log
+
 # run entrypoint.sh
-RUN ./entrypoint.sh
+ENTRYPOINT ["./entrypoint.sh"]
