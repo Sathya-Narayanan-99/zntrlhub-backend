@@ -1,4 +1,5 @@
 from django.contrib.auth.models import BaseUserManager
+from django.db.models import Q
 from django.db import models
 
 from app.querysets import VisitorQuerySet
@@ -50,7 +51,7 @@ class VisitorManager(models.Manager):
     def get_queryset(self):
         return VisitorQuerySet(self.model, using=self._db)
 
-    def create_visitor(self, name, whatsapp_number, device_uuid, account):
+    def create_visitor(self, whatsapp_number, device_uuid, account, name=None):
         visitor = self.create(name=name, whatsapp_number=whatsapp_number, device_uuid=device_uuid)
         visitor.account.add(account)
         return visitor
@@ -68,6 +69,12 @@ class VisitorManager(models.Manager):
 
     def get_visitors_with_analytics_for_account(self, account):
         return self.get_queryset().with_analytics_for_account(account)
+
+    def get_visitors_without_name_for_account(self, account):
+        return self.get_queryset().for_account(account=account).filter(
+                                                Q(name__isnull=True) |
+                                                Q(name="")
+                                            )
 
 
 class AnalyticsManager(models.Manager):
@@ -87,7 +94,7 @@ class AnalyticsManager(models.Manager):
     def get_distinct_button_clicked_for_account(self, account):
         return self.filter(account=account).exclude(button_clicked="").values_list('button_clicked', flat=True).distinct()
 
-    def get_unique_visitor_count_for_account(self, account, query=None):
+    def get_unique_visitor_for_account(self, account, query=None):
         queryset = self.get_analytics_for_account(account=account)
         if not query:
             return queryset
@@ -95,8 +102,9 @@ class AnalyticsManager(models.Manager):
         from app.filters import AnalyticsFilters
         analytics_filter = AnalyticsFilters(queryset)
         _, filtered_queryset = analytics_filter.apply_filters(query=query)
+        visitor_ids = [item['visitor'] for item in filtered_queryset.distinct('visitor').values('visitor')]
 
-        return filtered_queryset.distinct('visitor').count()
+        return visitor_ids
 
 
 class SegmentationManager(models.Manager):

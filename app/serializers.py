@@ -9,7 +9,8 @@ from app.tenant import get_current_account
 
 from .models import (Account, Visitor, Analytics,
                      Segmentation, WatiAttribute,
-                     WatiTemplate, Campaign, Message)
+                     WatiTemplate, Campaign, Message,
+                     VisitorSegmentationMap)
 
 User = get_user_model()
 
@@ -100,9 +101,7 @@ class SegmentationSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def get_visitor_count(self, instance):
-        query = instance.rql_query
-        account = get_current_account()
-        count = Analytics.objects.get_unique_visitor_count_for_account(account=account, query=query)
+        count = VisitorSegmentationMap.objects.filter(segmentation=instance).count()
         return count
 
     def validate_rql_query(self, value):
@@ -131,15 +130,16 @@ class WatiTemplateSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class CampaignSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = Campaign
-        fields = '__all__'
-
-
 class MessageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Message
+        fields = '__all__'
+
+
+class CampaignSerializer(serializers.ModelSerializer):
+    messages = MessageSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Campaign
         fields = '__all__'

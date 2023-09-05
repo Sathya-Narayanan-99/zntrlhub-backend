@@ -64,7 +64,7 @@ class Wati:
     def get_connection_status(self):
         url = f"{self.api_endpoint}/api/v1/getContacts"
         try:
-            res = requests.get(url, headers=self._get_headers(), timeout=90)
+            res = requests.get(url, headers=self._get_headers(), timeout=10)
             res.raise_for_status()
             return True
         except Exception as exc:
@@ -80,10 +80,33 @@ class Wati:
             )
 
             wati_message_id = message_response['messages']['items'][0]['id']
-            visitor = Visitor.objects.get(id=receiver_phone_number)
+            visitor = Visitor.objects.get(whatsapp_number=receiver_phone_number)
             WatiMessage.objects.create(
                 wati_message_id=wati_message_id,
                 message=message,
                 visitor=visitor
             )
 
+    def get_contacts(self, whatsapp_number):
+        url = f"{self.api_endpoint}/api/v1/getContacts"
+        attribute = [{
+            "name": "phone",
+            "operator": "==",
+            "value": whatsapp_number
+        }]
+        url += f'?attribute={attribute}'
+        try:
+            res = requests.get(url, headers=self._get_headers(), timeout=90)
+            res.raise_for_status()
+        except Exception as exc:
+            # TODO: Handle exceptions
+            print(str(exc))
+            raise exc
+        contacts = res.json().get('contact_list')
+        return contacts
+
+    def get_name_for_number(self, whatsapp_number):
+        contacts = self.get_contacts(whatsapp_number=whatsapp_number)
+        if contacts:
+            contact = contacts[0]
+            return contact.get('fullName')

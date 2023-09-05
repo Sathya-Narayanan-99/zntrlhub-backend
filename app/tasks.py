@@ -2,8 +2,8 @@ from celery import shared_task
 from celery.utils.log import get_task_logger
 from datetime import datetime
 
-from app.models import WatiAttribute, Message
-from app.services import WatiService
+from app.models import WatiAttribute, Segmentation, Message
+from app.services import WatiService, SegmentationService, VisitorService
 from app.wati import Wati
 
 
@@ -18,17 +18,34 @@ def update_wati_template():
 
 
 @shared_task
-def schedule_message(message: Message, recievers: list):
+def sync_visitors_name():
+    wati_attributes = WatiAttribute.objects.filter(connected=True)
+    for wati_attribute in wati_attributes:
+        VisitorService.sync_name_for_visitors_for_account(account=wati_attribute.account)
+
+
+@shared_task
+def sync_visitors_for_segmentation():
+    segmentations = Segmentation.objects.all()
+    for segmentation in segmentations:
+        SegmentationService.update_visitor_segmentation_mapping(segmentation=segmentation)
+
+
+@shared_task
+def schedule_message(message_id: int, recievers: list):
     '''
     This function is invoked to schedule a message.
     '''
+    message = Message.objects.get(id=message_id)
     account = message.campaign.account
     wati_attribute = WatiAttribute.objects.get_wati_attribute_for_account(account=account)
 
-    wati = Wati(**wati_attribute.get_api_credentials())
-    wati.send_tempate_messages(
-        template_name=message.template.get('name'),
-        broadcast_name=message.campaign.name,
-        recievers=recievers,
-        message=message
-    )
+    if wati_attribute.connected:
+
+        wati = Wati(**wati_attribute.get_api_credentials())
+        wati.send_tempate_messages(
+            template_name=message.template,
+            broadcast_name=message.campaign.name,
+            recievers=recievers,
+            message=message
+        )

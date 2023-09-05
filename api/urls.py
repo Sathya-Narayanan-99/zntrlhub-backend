@@ -15,6 +15,7 @@ router.register(r'analytics', views.AnalyticsViewSet, basename='analytics')
 router.register(r'segmentations', views.SegmentationViewset, basename='segmentations')
 router.register(r'campaigns', views.CampaignViewset, basename='campaigns')
 router.register(r'messages', views.MessageViewset, basename='messages')
+router.register(r'templates', views.TemplateViewset, basename='templates')
 
 urlpatterns = [
     path('token/', TokenObtainPairView.as_view(), name='token-obtain'),
@@ -26,6 +27,7 @@ urlpatterns = [
     path('analytics/ingest/', views.AnalyticsIngestionAPIView.as_view(), name='analytics-ingest'),
 
     path('wati/auth/', views.WatiAuthAPIView.as_view(), name='wati-auth'),
+    # path('wati/events/', views.WatiEventsAPIView.as_view(), name='wati-events'),
 
     path('', include(router.urls)),
 ]
